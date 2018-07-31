@@ -14,9 +14,10 @@ import json
 import requests
 import random
 import cgi
+import ssl
 
-hostName = "0.0.0.0"
-hostPort = 5000
+hostName = "rmkeezer.com"
+hostPort = 8000
 
 class MyServer(BaseHTTPRequestHandler):
 
@@ -33,7 +34,7 @@ class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         print("TEST")
-        #self.wfile.write(bytes("<p>You accessed path: %s</p>" % self.path, "utf-8"))
+        # self.wfile.write(bytes("<p>You accessed path: %s</p>" % self.path, "utf-8"))
 
     #	POST is for submitting data.
     def do_POST(self):
@@ -46,19 +47,22 @@ class MyServer(BaseHTTPRequestHandler):
             headers=self.headers,
             environ={'REQUEST_METHOD': 'POST'})
 
-        print(form.getvalue("url"))
-        self.wfile.write(json.dumps({"a":"test"}).encode('utf-8'))
-        return
+        url = form.getvalue("url")
+        print(url)
 
-        try:
-            while True:
-                pass
-        except KeyboardInterrupt:
-            pass
+        r = requests.post("http://98.192.12.55:5000/", data={'url': url})
+
+        print(r.status_code, r.reason)
+
+        print(r.text)
+        self.wfile.write(r.text)
+        return
 
 
 myServer = HTTPServer((hostName, hostPort), MyServer)
 print(time.asctime(), "Server Starts - %s:%s" % (hostName, hostPort))
+
+myServer.socket = ssl.wrap_socket(myServer.socket, certfile='/etc/letsencrypt/live/rmkeezer.com/cert.pem', keyfile='/etc/letsencrypt/live/rmkeezer.com/privkey.pem', server_side=True)
 
 try:
     myServer.serve_forever()
