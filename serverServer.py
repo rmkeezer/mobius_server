@@ -55,7 +55,7 @@ class MyServer(BaseHTTPRequestHandler):
         print(r.status_code, r.reason)
 
         print(r.text)
-        self.wfile.write(r.text)
+        self.wfile.write(bytes(r.text, 'utf-8'))
         return
 
 

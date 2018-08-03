@@ -15,6 +15,23 @@ import requests
 import random
 import cgi
 
+from scoreSong import init, scoreMp3
+model = init()
+
+import youtube_dl
+postprocessors = []
+postprocessors.append({
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': None,
+            'nopostoverwrites': None,
+})
+ydl_opts = {
+    'postprocessors': postprocessors,
+    'outtmpl': 'songs/%(title)s-%(id)s.%(ext)s'
+}
+ydl = youtube_dl.YoutubeDL(ydl_opts)
+
 hostName = "0.0.0.0"
 hostPort = 5000
 
@@ -46,8 +63,19 @@ class MyServer(BaseHTTPRequestHandler):
             headers=self.headers,
             environ={'REQUEST_METHOD': 'POST'})
 
-        print(form.getvalue("url"))
-        self.wfile.write(json.dumps({"a":"test"}).encode('utf-8'))
+        url = form.getvalue("url")
+        print(url)
+        
+        info_dict = ydl.extract_info(url, download=False)
+        title = info_dict['title'].replace('"',"'").replace(":"," -")
+        mp3fn = title + '-' + info_dict['id']
+
+        if not os.path.exists('songs/' + mp3fn + '.mp3'):
+            ydl.download([url])
+
+        scoreMp3(mp3fn, model)
+
+        self.wfile.write(json.dumps({"filename":mp3fn}).encode('utf-8'))
         return
 
         try:

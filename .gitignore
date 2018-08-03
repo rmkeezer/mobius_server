@@ -1,4 +1,7 @@
 logs/
 models/
-output/
+songs/
+sheets/
+midis/
 *.mp3
+*.pyc
